@@ -1,0 +1,52 @@
+#include <WiFi.h>
+#include <WebServer.h>
+
+const char* ssid = "ESP32_LED";
+const char* password = "12345678";
+
+const int LED_PIN = 3;
+
+bool ledState = false;
+
+WebServer server(80);
+
+void handleRoot() {
+
+  String page = "<html><body>";
+  page += "<h1>ESP32 LED Control</h1>";
+  page += "<p><a href=\"/toggle\"><button style='font-size:40px'>Toggle LED</button></a></p>";
+  page += "</body></html>";
+
+  server.send(200, "text/html", page);
+}
+
+void handleToggle() {
+
+  ledState = !ledState;
+  digitalWrite(LED_PIN, ledState);
+
+  server.sendHeader("Location","/");
+  server.send(303);
+}
+
+void setup() {
+
+  Serial.begin(115200);
+
+  pinMode(LED_PIN, OUTPUT);
+
+  WiFi.softAP(ssid, password);
+
+  Serial.println("Access Point Started");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.softAPIP());
+
+  server.on("/", handleRoot);
+  server.on("/toggle", handleToggle);
+
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+}
