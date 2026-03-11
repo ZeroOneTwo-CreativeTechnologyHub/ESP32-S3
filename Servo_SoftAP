@@ -1,0 +1,80 @@
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ESP32Servo.h>
+
+const char* ssid = "ESP32_SERVO";
+const char* password = "12345678";
+
+constexpr uint8_t SERVO_PIN = 3;
+
+WebServer server(80);
+Servo myServo;
+
+int servoPos = 90;
+
+const char MAIN_page[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+<title>ESP32 Servo Control</title>
+</head>
+<body>
+<h1>ESP32 Servo Control</h1>
+
+<p>
+<a href="/left"><button style="font-size:30px">Left</button></a>
+<a href="/center"><button style="font-size:30px">Center</button></a>
+<a href="/right"><button style="font-size:30px">Right</button></a>
+</p>
+
+</body>
+</html>
+)rawliteral";
+
+void handleRoot() {
+  server.send_P(200, "text/html", MAIN_page);
+}
+
+void moveServo(int pos) {
+  servoPos = pos;
+  myServo.write(servoPos);
+}
+
+void setup() {
+
+  Serial.begin(115200);
+
+  myServo.attach(SERVO_PIN);
+  myServo.write(servoPos);
+
+  WiFi.softAP(ssid, password);
+
+  Serial.print("AP IP: ");
+  Serial.println(WiFi.softAPIP());
+
+  server.on("/", handleRoot);
+
+  server.on("/left", []() {
+    moveServo(0);
+    server.sendHeader("Location","/");
+    server.send(303);
+  });
+
+  server.on("/center", []() {
+    moveServo(90);
+    server.sendHeader("Location","/");
+    server.send(303);
+  });
+
+  server.on("/right", []() {
+    moveServo(180);
+    server.sendHeader("Location","/");
+    server.send(303);
+  });
+
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+}
