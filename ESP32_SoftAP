@@ -1,3 +1,5 @@
+//Upload the code, connect to the ESP wifi nextwork on your mobile/laptop, navigate to 192.168.4.1, turn your LED off and on
+
 #include <WiFi.h>
 #include <WebServer.h>
 
